@@ -35,15 +35,26 @@ var parseRawData = function(rawData) {
 	lines.forEach(function(line){
 	
 		line = line.trim();
-
+		
 		// colon space because that's the standard delimiter - not ':' as that's used in eg, http links
 		if ( line && line.includes(delimiter) ) {
 			var lineParts = line.split(DELIMITER);
 
 			// 'Greater than' since lines often have more than one colon, eg values with URLs
-			if ( lineParts.length >= 2 ) {
+			if ( lineParts.length != 3 || line.includes('http') ) {
 				var key = changeCase.camelCase(lineParts[0]),
 					value = lineParts.splice(1).join(DELIMITER).trim()
+
+				// If multiple lines use the same key, combine the values
+				if ( key in result ) {
+					result[key] = `${result[key]} ${value}`;
+					return
+				}
+				result[key] = value;
+			}
+			else {
+				var key = changeCase.camelCase(lineParts[1]),
+					value = lineParts.splice(2).join(DELIMITER).trim()
 
 				// If multiple lines use the same key, combine the values
 				if ( key in result ) {
